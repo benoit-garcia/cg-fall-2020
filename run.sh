@@ -5,6 +5,7 @@ debug=0
 
 # global variables
 known_casts=()
+learnable_spells=()
 orders=()
 order=""
 requirements=()
@@ -27,6 +28,7 @@ echod () {
 
 get_actions() {
     known_casts=()
+    learnable_spells=()
     orders=()
 
     read -r actionCount
@@ -49,6 +51,9 @@ get_actions() {
                 ;;
             CAST)
                 known_casts+=("${actionId}	${actionType}	${delta0}	${delta1}	${delta2}	${delta3}	${price}	${tomeIndex}	${taxCount}	${castable}	${repeatable}")
+                ;;
+            LEARN)
+                learnable_spells+=("${actionId}	${actionType}	${delta0}	${delta1}	${delta2}	${delta3}	${price}	${tomeIndex}	${taxCount}	${castable}	${repeatable}")
                 ;;
             *)
                 # Don't care
@@ -98,6 +103,14 @@ display_inventory() {
     echod
 }
 
+display_learnable_spells() {
+    echod -e "Learnable spells:"
+    for ((i=0;i<${#learnable_spells[*]};i++)); do
+        echod -e "\t${learnable_spells[$i]}"
+    done
+    echod
+}
+
 display_missing_items() {
     echod "Missing items:"
     echod -e "\tBlue:\t${missing_items[0]}"
@@ -126,6 +139,10 @@ display_requirements() {
         echod -e "\t${requirements[$i]}"
     done
     echod
+}
+
+learn_spell() {
+    action=$(printf '%s' "${learnable_spells[0]}" | awk '{print $2 " " $1}')
 }
 
 cast() {
@@ -174,7 +191,12 @@ while true; do
     display_inventory
     display_requirements
     display_missing_items
+    display_learnable_spells
 
-    cast 3
+    if [[ ${#learnable_spells[*]} -gt 0 ]]; then
+        learn_spell
+    else
+        cast 3
+    fi
     echo "${action}"
 done
